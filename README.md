@@ -1,2 +1,2 @@
-# learning-react-express
+# learning-node-express
 All the code I wrote while learning Node.js and Express
