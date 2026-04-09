@@ -6,11 +6,11 @@ const crypto = require('crypto');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    require: [true, 'Please tell us your name!'],
+    required: [true, 'Please tell us your name!'],
   },
   email: {
     type: String,
-    require: [true, 'Please provide your email'],
+    required: [true, 'Please provide your email'],
     unique: true,
     lowercase: true,
     validate: [validator.isEmail, 'Please provide a valid email'],
@@ -23,13 +23,13 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    require: [true, 'Please provide a password'],
+    required: [true, 'Please provide a password'],
     minLength: 8,
     select: false,
   },
   passwordConfirm: {
     type: String,
-    require: [true, 'Please confirm your password'],
+    required: [true, 'Please confirm your password'],
     minLength: 8,
     validate: {
       // This only works on SAVE!!!

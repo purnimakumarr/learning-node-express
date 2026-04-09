@@ -6,7 +6,7 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
 
-const signToken = id =>
+const signToken = (id) =>
   jwt.sign(
     {
       id,
@@ -81,7 +81,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   if (!token)
     return next(
-      new AppError('You are not logged out! Please log in to get access', 401),
+      new AppError('You are not logged in! Please log in to get access', 401),
     );
 
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
