@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
@@ -5,14 +6,30 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
+
+// Further HELMET configuration for Security Policy (CSP)
+const scriptSrcUrls = ['https://unpkg.com/', 'https://tile.openstreetmap.org'];
+const styleSrcUrls = [
+  'https://unpkg.com/',
+  'https://tile.openstreetmap.org',
+  'https://fonts.googleapis.com/',
+];
+const connectSrcUrls = [
+  'https://unpkg.com',
+  'https://tile.openstreetmap.org',
+  'ws://localhost:54928',
+];
+const fontSrcUrls = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
 // GLOBAL MIDDLEWARES
 // Set security HTTP headers
@@ -32,13 +49,32 @@ const limiter = rateLimit({
 
 app.use('/api', limiter);
 
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
+//set security http headers
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: [],
+      connectSrc: ["'self'", ...connectSrcUrls],
+      scriptSrc: ["'self'", ...scriptSrcUrls],
+      styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+      workerSrc: ["'self'", 'blob:'],
+      objectSrc: [],
+      imgSrc: ["'self'", 'blob:', 'data:', 'https:'],
+      fontSrc: ["'self'", ...fontSrcUrls],
+    },
+  }),
+);
+
 // Body parser, reading data from the body into req.body
 app.use(
   express.json({
     limit: '10kb',
   }),
 );
-
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(mongoSanitize());
 
 app.use(xss());
@@ -57,7 +93,7 @@ app.use(
 );
 
 // Serving static files
-app.use(express.static(`${__dirname}/public`));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Test middleware
 app.use((req, res, next) => {
@@ -65,8 +101,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// ROUTES
+app.use(cookieParser());
 
+// ROUTES
+app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);

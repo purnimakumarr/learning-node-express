@@ -1,0 +1,35 @@
+doctype html 
+html 
+    head 
+        block head
+        meta(charset='utf-8')
+        meta(charset='viewport' content='width=device-width, initial-scale=1.0')
+        //- meta(http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; connect-src 'self' http://localhost:3000; img-src 'self' data: https://tile.openstreetmap.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;")
+    link(rel='stylesheet' href='/css/style.css')
+    link(rel='shortcut icon' type='image/png' href='/img/favicon.png')
+    link(rel='stylesheet', href='https://fonts.googleapis.com/css?family=Lato:300,300i,700')
+    title Natours | #{title}
+
+    body
+        // HEADER
+        include _header
+
+        // CONTENT
+        block content 
+            h1 This is placeholder heading
+
+        // FOOTER
+        include _footer
+
+        //- script(src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        //- integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        //- crossorigin="")
+        //- script( src='/js/mapbox.js')
+        //- script(src='https://unpkg.com/axios@1.13.2/dist/axios.min.js')
+        //- script(src='/js/login.js')
+        script(src='js/bundle.js')
+
+
+
+
+
