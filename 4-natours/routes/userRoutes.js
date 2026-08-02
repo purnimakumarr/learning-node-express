@@ -1,4 +1,5 @@
 const express = require('express');
+const multer = require('multer');
 const {
   getAllUsers,
   createUser,
@@ -8,6 +9,8 @@ const {
   updateMe,
   deleteMe,
   getMe,
+  uploadUserPhoto,
+  resizeUserPhoto,
 } = require('../controllers/userController');
 const {
   signup,
@@ -33,7 +36,7 @@ router.use(protect);
 router.patch('/updateMyPassword', updatePassword);
 
 router.get('/me', getMe, getUser);
-router.patch('/updateMe', updateMe);
+router.patch('/updateMe', uploadUserPhoto, resizeUserPhoto, updateMe);
 router.delete('/deleteMe', deleteMe);
 
 router.use(restrictTo('admin'));

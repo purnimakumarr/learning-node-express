@@ -5,6 +5,10 @@ block append head
     link(rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
         crossorigin="")
+    script(src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin="")
+    script(src="https://checkout.razorpay.com/v1/checkout.js")
 
 mixin overviewBox(label, text, icon)
     .overview-box__detail
@@ -49,7 +53,7 @@ block content
 
                     each guide in tour.guides 
                         .overview-box__detail
-                            img.overview-box__img(src=`/img/users/${guide.photo}`, alt=`${guide.name}`)
+                            img.overview-box__img(src=`/img/users/${guide.photo || 'default.jpg'}`, alt=`${guide.name}`)
 
                             - if(guide.role === 'lead-guide')
                                 span.overview-box__label Lead guide
@@ -86,4 +90,13 @@ block content
             .cta__content
                 h2.heading-secondary What are you waiting for?
                 p.cta__text= `${tour.duration} days. 1 adventure. Infinite memories. Make it yours today!`
-                button.btn.btn--green.span-all-rows Book tour now!
+
+                if user
+                    button.btn.btn--green.span-all-rows#book-tour(
+                        data-tour-id=`${tour.id}`,
+                        data-razorpay-key=process.env.RAZORPAY_KEY_ID,
+                        data-user-name=user.name,
+                        data-user-email=user.email
+                    ) Book tour now!
+                else
+                    a.btn.btn--green.span-all-rows(href='/login') Log in to book tour

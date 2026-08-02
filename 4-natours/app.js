@@ -14,26 +14,34 @@ const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const viewRouter = require('./routes/viewRoutes');
+const bookingRouter = require('./routes/bookingRoutes');
 
 const app = express();
 
 // Further HELMET configuration for Security Policy (CSP)
-const scriptSrcUrls = ['https://unpkg.com/', 'https://tile.openstreetmap.org'];
+const scriptSrcUrls = ['https://unpkg.com', 'https://checkout.razorpay.com'];
 const styleSrcUrls = [
-  'https://unpkg.com/',
+  'https://unpkg.com',
   'https://tile.openstreetmap.org',
-  'https://fonts.googleapis.com/',
+  'https://fonts.googleapis.com',
 ];
 const connectSrcUrls = [
   'https://unpkg.com',
   'https://tile.openstreetmap.org',
+  'https://checkout.razorpay.com',
+  'https://api.razorpay.com',
   'ws://localhost:54928',
 ];
 const fontSrcUrls = ['fonts.googleapis.com', 'fonts.gstatic.com'];
+const frameSrcUrls = ['https://checkout.razorpay.com', 'https://api.razorpay.com'];
 
 // GLOBAL MIDDLEWARES
 // Set security HTTP headers
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  }),
+);
 
 // Development logging
 if (process.env.NODE_ENV === 'development') {
@@ -60,6 +68,7 @@ app.use(
       connectSrc: ["'self'", ...connectSrcUrls],
       scriptSrc: ["'self'", ...scriptSrcUrls],
       styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+      frameSrc: ["'self'", ...frameSrcUrls],
       workerSrc: ["'self'", 'blob:'],
       objectSrc: [],
       imgSrc: ["'self'", 'blob:', 'data:', 'https:'],
@@ -108,6 +117,7 @@ app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/bookings', bookingRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, '404'));

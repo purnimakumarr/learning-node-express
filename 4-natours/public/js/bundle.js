@@ -8353,6 +8353,70 @@ async function updateSettings(data, type) {
     (0, _alerts.showAlert)('error', err.response.data.message);
   }
 }
+},{"axios":"../../node_modules/axios/index.js","./alerts":"alerts.js"}],"razorpay.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.bookTour = void 0;
+var _axios = _interopRequireDefault(require("axios"));
+var _alerts = require("./alerts");
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
+/* eslint-disable */
+
+const bookTour = async function (tourId) {
+  let bookingConfig = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  try {
+    if (!window.Razorpay) {
+      throw new Error('Payment checkout failed to load. Please try again.');
+    }
+    if (!bookingConfig.razorpayKey) {
+      throw new Error('Payment configuration is missing. Please try again.');
+    }
+    const response = await (0, _axios.default)("/api/v1/bookings/checkout-order/".concat(tourId));
+    const order = response.data.order;
+
+    // 2) Configure Razorpay checkout
+    const options = {
+      key: bookingConfig.razorpayKey,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Natours',
+      description: 'Tour Booking',
+      order_id: order.id,
+      handler: async function (paymentResponse) {
+        try {
+          // 3) Verify payment on backend
+          const verification = await _axios.default.post('/api/v1/bookings/verify-payment', paymentResponse);
+          if (verification.data.status === 'success') {
+            (0, _alerts.showAlert)('success', 'Payment successful! Booking confirmed.');
+            window.setTimeout(() => {
+              location.assign('/my-bookings');
+            }, 1500);
+          }
+        } catch (err) {
+          (0, _alerts.showAlert)('error', err.response.data.message);
+        }
+      },
+      prefill: {
+        name: bookingConfig.userName,
+        email: bookingConfig.userEmail
+      },
+      theme: {
+        color: '#55c57a'
+      }
+    };
+
+    // 4) Open Razorpay Checkout popup
+    const razorpay = new window.Razorpay(options);
+    razorpay.open();
+  } catch (err) {
+    console.log(err);
+    (0, _alerts.showAlert)('error', err.message);
+  }
+};
+exports.bookTour = bookTour;
 },{"axios":"../../node_modules/axios/index.js","./alerts":"alerts.js"}],"index.js":[function(require,module,exports) {
 "use strict";
 
@@ -8368,11 +8432,13 @@ require("core-js/modules/web.dom.iterable.js");
 var _login = require("./login");
 var _mapbox = require("./mapbox");
 var _updateSettings = require("./updateSettings");
+var _razorpay = require("./razorpay");
 const mapBox = document.getElementById('map');
 const loginForm = document.querySelector('.form--login');
 const logoutBtn = document.querySelector('.nav__el--logout');
 const userDataForm = document.querySelector('.form-user-data');
 const userPasswordForm = document.querySelector('.form-user-password');
+const bookBtn = document.getElementById('book-tour');
 if (mapBox) {
   const locations = JSON.parse(mapBox.dataset.locations);
   (0, _mapbox.displayMap)(locations);
@@ -8388,12 +8454,11 @@ if (loginForm) {
 if (logoutBtn) logoutBtn.addEventListener('click', _login.logout);
 if (userDataForm) userDataForm.addEventListener('submit', e => {
   e.preventDefault();
-  const email = document.getElementById('email').value;
-  const name = document.getElementById('name').value;
-  (0, _updateSettings.updateSettings)({
-    name,
-    email
-  }, 'data');
+  const form = new FormData();
+  form.append('name', document.getElementById('name').value);
+  form.append('email', document.getElementById('email').value);
+  form.append('photo', document.getElementById('photo').files[0]);
+  (0, _updateSettings.updateSettings)(form, 'data');
 });
 if (userPasswordForm) userPasswordForm.addEventListener('submit', async e => {
   e.preventDefault();
@@ -8411,5 +8476,18 @@ if (userPasswordForm) userPasswordForm.addEventListener('submit', async e => {
   document.getElementById('password').value = '';
   document.getElementById('password-confirm').value = '';
 });
-},{"core-js/modules/es7.array.flat-map.js":"../../node_modules/core-js/modules/es7.array.flat-map.js","core-js/modules/es6.array.sort.js":"../../node_modules/core-js/modules/es6.array.sort.js","core-js/modules/es7.promise.finally.js":"../../node_modules/core-js/modules/es7.promise.finally.js","core-js/modules/es7.symbol.async-iterator.js":"../../node_modules/core-js/modules/es7.symbol.async-iterator.js","core-js/modules/es7.string.trim-left.js":"../../node_modules/core-js/modules/es7.string.trim-left.js","core-js/modules/es7.string.trim-right.js":"../../node_modules/core-js/modules/es7.string.trim-right.js","core-js/modules/web.timers.js":"../../node_modules/core-js/modules/web.timers.js","core-js/modules/web.immediate.js":"../../node_modules/core-js/modules/web.immediate.js","core-js/modules/web.dom.iterable.js":"../../node_modules/core-js/modules/web.dom.iterable.js","./login":"login.js","./mapbox":"mapbox.js","./updateSettings":"updateSettings.js"}]},{},["index.js"], null)
+if (bookBtn) bookBtn.addEventListener('click', e => {
+  e.target.textContent = 'Processing...';
+  const _e$target$dataset = e.target.dataset,
+    tourId = _e$target$dataset.tourId,
+    razorpayKey = _e$target$dataset.razorpayKey,
+    userName = _e$target$dataset.userName,
+    userEmail = _e$target$dataset.userEmail;
+  (0, _razorpay.bookTour)(tourId, {
+    razorpayKey,
+    userName,
+    userEmail
+  });
+});
+},{"core-js/modules/es7.array.flat-map.js":"../../node_modules/core-js/modules/es7.array.flat-map.js","core-js/modules/es6.array.sort.js":"../../node_modules/core-js/modules/es6.array.sort.js","core-js/modules/es7.promise.finally.js":"../../node_modules/core-js/modules/es7.promise.finally.js","core-js/modules/es7.symbol.async-iterator.js":"../../node_modules/core-js/modules/es7.symbol.async-iterator.js","core-js/modules/es7.string.trim-left.js":"../../node_modules/core-js/modules/es7.string.trim-left.js","core-js/modules/es7.string.trim-right.js":"../../node_modules/core-js/modules/es7.string.trim-right.js","core-js/modules/web.timers.js":"../../node_modules/core-js/modules/web.timers.js","core-js/modules/web.immediate.js":"../../node_modules/core-js/modules/web.immediate.js","core-js/modules/web.dom.iterable.js":"../../node_modules/core-js/modules/web.dom.iterable.js","./login":"login.js","./mapbox":"mapbox.js","./updateSettings":"updateSettings.js","./razorpay":"razorpay.js"}]},{},["index.js"], null)
 //# sourceMappingURL=/bundle.js.map
